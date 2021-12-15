@@ -51,9 +51,6 @@ h1 {
   color: black;
   cursor: default;
 }
-#issue-table-div {
-  margin-top: 10px;
-}
 #issue-table-div table {
   width: 100%;
   border-collapse: collapse;
@@ -119,4 +116,30 @@ h1 {
   color: #fff !important;
   border: none;
   cursor: pointer;
+}
+.issue-input-types {
+  margin-top: 10px;
+  margin-bottom: 5px;
+  margin-left: 5px;
+  height: 25px;
+  border: none;
+  border-radius: 5px;
+}
+#issue-table-search-box {
+  width: 250px;
+}
+#issue-table-sort-box {
+  width: 95px;
+}
+#asc-desc-button:hover {
+  background-color: #292961;
+  color: #fff;
+  cursor: pointer;
+}
+#current-issue {
+  text-align: center;
+}
+#current-issue h2 {
+  margin-bottom: 0;
+  margin-top: 10px;
 }

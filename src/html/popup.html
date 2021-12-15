@@ -18,6 +18,16 @@
           <button disabled id="time-pause-button">Pause</button>
           <button disabled id="time-stop-button">Stop</button>
         </div>
+        <div id="current-issue"><h2>No Issue selected!</h2></div>
+        <input
+          id="issue-table-search-box"
+          class="issue-input-types"
+          placeholder="Search for Issue Title"
+        />
+        <select id="issue-table-sort-box" class="issue-input-types">
+          <option value="due_date">Due Date</option>
+        </select>
+        <button id="asc-desc-button" class="issue-input-types">^</button>
         <div id="issue-table-div">
           <table id="issue-table">
             <tr>

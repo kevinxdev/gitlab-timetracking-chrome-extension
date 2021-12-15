@@ -21,10 +21,60 @@ let buttonStart = document.getElementById("time-start-button");
 let buttonStop = document.getElementById("time-stop-button");
 let buttonPause = document.getElementById("time-pause-button");
 let timeDisplay = document.getElementById("time-display");
+let issueTable = document.getElementById("issue-table");
+let issueTableSearchBox = document.getElementById("issue-table-search-box");
+let issueTableSortBox = document.getElementById("issue-table-sort-box");
+let issueASCDESCButton = document.getElementById("asc-desc-button");
+let currentIssueInformation = document.getElementById("current-issue");
 
 let timer = null;
 
 let port = chrome.runtime.connect();
+
+issueTableSearchBox.addEventListener("input", searchIssues);
+
+issueTableSortBox.addEventListener("change", function () {
+  clearIssueTable();
+  loadIssues({ sort: this.value, sorting: issueASCDESCButton.value });
+});
+
+issueASCDESCButton.addEventListener("click", function () {
+  clearIssueTable();
+  loadIssues({ sort: issueTableSortBox.value, sorting: this.innerText });
+  if (this.innerText === "v") {
+    this.innerText = "^";
+  } else {
+    this.innerText = "v";
+  }
+});
+
+chrome.storage.onChanged.addListener(function (changes, areaName) {
+  if (areaName === "sync" && changes.hasOwnProperty("currentIssue")) {
+    chrome.storage.sync.get(
+      ["gitlabUrl", "gitlabPAT", "gitlabUserID"],
+      function (data) {
+        if (data.gitlabUrl && data.gitlabPAT && data.gitlabUserID) {
+          let request = new Request(
+            `${data.gitlabUrl}api/v4/issues?assignee_id=${data.gitlabUserID}&private_token=${data.gitlabPAT}&scope=all&state=opened`,
+            {
+              headers: {
+                "PRIVATE-TOKEN": data.gitlabPAT,
+              },
+            }
+          );
+          fetch(request)
+            .then((response) => response.json())
+            .then((data) => {
+              let issue = data.filter(
+                (issue) => issue.id == changes.currentIssue.newValue
+              )[0];
+              currentIssueInformation.innerHTML = `<h2>Current issue: <a href='${issue.web_url}'>${issue.references.short} ${issue.title}</a></h2>`;
+            });
+        }
+      }
+    );
+  }
+});
 
 dashboardButton.addEventListener("click", function () {
   chrome.tabs.create({ url: chrome.runtime.getURL("src/html/dashboard.html") });
@@ -64,21 +114,24 @@ buttonStart.addEventListener("click", function () {
 buttonStop.addEventListener("click", stopAction);
 
 function stopAction() {
-  chrome.storage.sync.get(["currentIssue", "countedTime", "timerPaused"], function (cdata) {
-    if (cdata.currentIssue && cdata.countedTime && !cdata.timerPaused) {
-      chrome.storage.sync.get(cdata.currentIssue, function (data) {
-        if (data[cdata.currentIssue]) {
-          data = data[cdata.currentIssue];
-          data.push({ stopTime: new Date().getTime() });
-          chrome.storage.sync.set({ [cdata.currentIssue]: data });
-        } else {
-          chrome.storage.sync.set({
-            [cdata.currentIssue]: [{ stopTime: new Date().getTime() }],
-          });
-        }
-      });
+  chrome.storage.sync.get(
+    ["currentIssue", "countedTime", "timerPaused"],
+    function (cdata) {
+      if (cdata.currentIssue && cdata.countedTime && !cdata.timerPaused) {
+        chrome.storage.sync.get(cdata.currentIssue, function (data) {
+          if (data[cdata.currentIssue]) {
+            data = data[cdata.currentIssue];
+            data.push({ stopTime: new Date().getTime() });
+            chrome.storage.sync.set({ [cdata.currentIssue]: data });
+          } else {
+            chrome.storage.sync.set({
+              [cdata.currentIssue]: [{ stopTime: new Date().getTime() }],
+            });
+          }
+        });
+      }
     }
-  });
+  );
   buttonStop.classList.add("timer-button-activated");
   buttonStart.classList.remove("timer-button-activated");
   buttonPause.classList.remove("timer-button-activated");
@@ -143,7 +196,7 @@ function selectIssue() {
   buttonPause.disabled = true;
 }
 
-function loadIssues() {
+function loadIssues(searchObject) {
   chrome.storage.sync.get(
     ["gitlabUrl", "gitlabPAT", "gitlabUserID"],
     function (data) {
@@ -160,7 +213,29 @@ function loadIssues() {
           .then((response) => response.json())
           .then((data) => {
             let issues = data.filter((issue) => issue.state === "opened");
-            let issueTable = document.getElementById("issue-table");
+            issues = issues.sort((a, b) => {
+              return a.due_date > b.due_date ? 1 : -1;
+            });
+            if (searchObject) {
+              if (searchObject.hasOwnProperty("nameFilter")) {
+                let nameFilter = searchObject.nameFilter.toLowerCase();
+                issues = issues.filter((issue) =>
+                  issue.title.toLowerCase().includes(nameFilter)
+                );
+              } else if (searchObject.hasOwnProperty("sort")) {
+                let sort = searchObject.sort;
+                let sorting = searchObject.sorting;
+                console.log(sort);
+                issues = issues.sort((a, b) => {
+                  if (sorting === "v") {
+                    return a[sort] > b[sort] ? 1 : -1;
+                  } else {
+                    return a[sort] < b[sort] ? 1 : -1;
+                  }
+                });
+              }
+            }
+            console.log(issues);
             issues.forEach((issue) => {
               let issueRow = document.createElement("tr");
               issueRow.setAttribute("id", issue.id);
@@ -230,6 +305,10 @@ function loadIssues() {
                     }
                   );
                 }
+                let issue = issues.filter(
+                  (issue) => issue.id == data.currentIssue
+                )[0];
+                currentIssueInformation.innerHTML = `<h2>Current issue: <a href='${issue.web_url}'>${issue.references.short} ${issue.title}</a></h2>`;
               }
             });
             let buttons = document.getElementsByClassName("btn-select");
@@ -249,6 +328,21 @@ function runTimer() {
       timeDisplay.children[0].innerText = (data.countedTime + 1).toHHMMSS();
     });
   }, 1000);
+}
+
+function searchIssues() {
+  clearIssueTable();
+  loadIssues({ nameFilter: this.value });
+}
+
+function clearIssueTable() {
+  issueTable.innerHTML = `<tr>
+    <th>#</th>
+    <th>Issue</th>
+    <th>State</th>
+    <th>Time spent</th>
+    <th>Selected</th>
+  </tr>`;
 }
 
 loadIssues();

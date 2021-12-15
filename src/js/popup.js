@@ -68,7 +68,7 @@ chrome.storage.onChanged.addListener(function (changes, areaName) {
               let issue = data.filter(
                 (issue) => issue.id == changes.currentIssue.newValue
               )[0];
-              currentIssueInformation.innerHTML = `<h2>Current issue: <a href='${issue.web_url}'>${issue.references.short} ${issue.title}</a></h2>`;
+              currentIssueInformation.innerHTML = `<h2>Current issue: <a href='${issue.web_url}' target='_blank'>${issue.references.short} ${issue.title}</a></h2>`;
             });
         }
       }
@@ -308,7 +308,7 @@ function loadIssues(searchObject) {
                 let issue = issues.filter(
                   (issue) => issue.id == data.currentIssue
                 )[0];
-                currentIssueInformation.innerHTML = `<h2>Current issue: <a href='${issue.web_url}'>${issue.references.short} ${issue.title}</a></h2>`;
+                currentIssueInformation.innerHTML = `<h2>Current issue: <a href='${issue.web_url}' target='_blank'>${issue.references.short} ${issue.title}</a></h2>`;
               }
             });
             let buttons = document.getElementsByClassName("btn-select");

@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <!-- Bootstrap CSS -->
+    <link
+      href="../../libs/bootstrap-5.0.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="../css/popup.css" />
   </head>
   <body>
@@ -25,7 +30,16 @@
           placeholder="Search for Issue Title"
         />
         <select id="issue-table-sort-box" class="issue-input-types">
-          <option value="due_date">Due Date</option>
+          <option value="created_at">Created at</option>
+          <option selected value="due_date">Due Date</option>
+          <option value="label_priority">Label priority</option>
+          <option value="milestone_due">Milestone due</option>
+          <option value="popularity">Popularity</option>
+          <option value="priority">Priority</option>
+          <option value="relative_position">Relative position</option>
+          <option value="title">Title</option>
+          <option value="updated_at">Updated at</option>
+          <option value="weight">Weight</option>
         </select>
         <button id="asc-desc-button" class="issue-input-types">^</button>
         <div id="issue-table-div">

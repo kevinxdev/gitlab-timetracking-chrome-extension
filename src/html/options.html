@@ -11,6 +11,7 @@
     />
     <link rel="stylesheet" href="../css/layout.css" />
     <link rel="stylesheet" href="../css/options.css" />
+    <link rel="stylesheet" href="../css/popup.css" />
 
     <title>GitLab Timetracker Options</title>
   </head>
@@ -31,8 +32,8 @@
     </nav>
     <div id="settings">
       <div class="container">
-        <h2>GitLab Settings</h2>
         <div class="row">
+          <h2>GitLab Settings</h2>
           <div class="col-md-12">
             <div class="form-group">
               <label for="gitlab-url">GitLab URL</label>
@@ -66,6 +67,64 @@
               </div>
             </div>
           </div>
+        </div>
+        <div class="row" style="margin-top: 10px">
+          <h2>Layout Settings</h2>
+          <div class="col-md-12">
+            <section style="width: 100%">
+              <div id="popup" class="grow-with-content">
+                <div id="popup-header">
+                  <img src="../img/gitlab32.png" alt="GitLab Logo" />
+                  <h1>GitLab Timetracker</h1>
+                </div>
+                <div id="popup-content">
+                  <div id="time-display">
+                    <h2>00:00:00</h2>
+                  </div>
+                  <div id="time-button-row">
+                    <button disabled id="time-start-button">Start</button>
+                    <button disabled id="time-pause-button">Pause</button>
+                    <button disabled id="time-stop-button">Stop</button>
+                  </div>
+                  <div id="current-issue"><h2>No Issue selected!</h2></div>
+                  <input
+                    id="issue-table-search-box"
+                    class="issue-input-types"
+                    placeholder="Search for Issue Title"
+                  />
+                  <select id="issue-table-sort-box" class="issue-input-types">
+                    <option value="created_at">Created at</option>
+                    <option selected value="due_date">Due Date</option>
+                    <option value="label_priority">Label priority</option>
+                    <option value="milestone_due">Milestone due</option>
+                    <option value="popularity">Popularity</option>
+                    <option value="priority">Priority</option>
+                    <option value="relative_position">Relative position</option>
+                    <option value="title">Title</option>
+                    <option value="updated_at">Updated at</option>
+                    <option value="weight">Weight</option>
+                  </select>
+                  <button id="asc-desc-button" class="issue-input-types">
+                    ^
+                  </button>
+                  <div id="issue-table-div">
+                    <table id="issue-table">
+                      <tr>
+                        <th>#</th>
+                        <th>Issue</th>
+                        <th>State</th>
+                        <th>Time spent</th>
+                        <th>Selected</th>
+                      </tr>
+                    </table>
+                  </div>
+                  <div id="dashboard-button-row">
+                    <button id="dashboard-button">Dashboard</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
     </div>

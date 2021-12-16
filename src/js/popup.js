@@ -35,19 +35,24 @@ issueTableSearchBox.addEventListener("input", searchIssues);
 
 issueTableSortBox.addEventListener("change", function () {
   clearIssueTable();
-  loadIssues({ sort: this.value, sorting: issueASCDESCButton.value });
+  window.sessionStorage.setItem("sort", this.value);
+  loadIssues();
 });
 
 issueASCDESCButton.addEventListener("click", function () {
   clearIssueTable();
-  loadIssues({ sort: issueTableSortBox.value, sorting: this.innerText });
+  if (this.innerText === "v") {
+    window.sessionStorage.setItem("sorting", "asc");
+  } else {
+    window.sessionStorage.setItem("sorting", "desc");
+  }
+  loadIssues();
   if (this.innerText === "v") {
     this.innerText = "^";
   } else {
     this.innerText = "v";
   }
 });
-
 chrome.storage.onChanged.addListener(function (changes, areaName) {
   if (areaName === "sync" && changes.hasOwnProperty("currentIssue")) {
     chrome.storage.sync.get(
@@ -196,21 +201,22 @@ function selectIssue() {
   buttonPause.disabled = true;
 }
 
-function loadIssues(searchObject) {
+function loadIssues() {
   let extendQuery = `&sort=asc&order_by=due_date`;
-  if (searchObject) {
-    if (searchObject.hasOwnProperty("nameFilter")) {
-      extendQuery += `&search=${searchObject.nameFilter}&in=title`;
-    } else if (searchObject.hasOwnProperty("sort")) {
-      let sort = searchObject.sort;
-      let sorting = searchObject.sorting;
-      if (sorting === "v") {
-        sorting = "asc";
-      } else {
-        sorting = "desc";
-      }
-      extendQuery = `&sort=${sorting}&order_by=${sort}`;
-    }
+  let sort = window.sessionStorage.getItem("sort");
+  let sorting = window.sessionStorage.getItem("sorting");
+  let nameFilter = window.sessionStorage.getItem("nameFilter");
+  if (!sort) {
+    window.sessionStorage.setItem("sort", "due_date");
+  }
+  if (!sorting) {
+    window.sessionStorage.setItem("sorting", "asc");
+  }
+  if (sort && sorting) {
+    extendQuery = `&sort=${sorting}&order_by=${sort}`;
+  }
+  if (nameFilter) {
+    extendQuery += `&search=${nameFilter}&in=title`;
   }
   chrome.storage.sync.get(
     ["gitlabUrl", "gitlabPAT", "gitlabUserID"],
@@ -326,7 +332,8 @@ function runTimer() {
 
 function searchIssues() {
   clearIssueTable();
-  loadIssues({ nameFilter: this.value });
+  window.sessionStorage.setItem("nameFilter", this.value);
+  loadIssues();
 }
 
 function clearIssueTable() {

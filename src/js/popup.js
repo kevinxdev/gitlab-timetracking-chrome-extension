@@ -22,6 +22,7 @@ let buttonStop = document.getElementById("time-stop-button");
 let buttonPause = document.getElementById("time-pause-button");
 let timeDisplay = document.getElementById("time-display");
 let issueTable = document.getElementById("issue-table");
+let issueTableBody = document.getElementById("issue-table-body");
 let issueTableSearchBox = document.getElementById("issue-table-search-box");
 let issueTableSortBox = document.getElementById("issue-table-sort-box");
 let issueASCDESCButton = document.getElementById("asc-desc-button");
@@ -234,7 +235,6 @@ function loadIssues() {
         fetch(request)
           .then((response) => response.json())
           .then((issues) => {
-            issues = issues.slice(0, 10);
             issues.forEach((issue) => {
               let issueRow = document.createElement("tr");
               issueRow.setAttribute("id", issue.id);
@@ -261,7 +261,7 @@ function loadIssues() {
                 issue.id +
                 "-button'>Select</button>";
               issueRow.appendChild(issueSelected);
-              issueTable.appendChild(issueRow);
+              issueTableBody.appendChild(issueRow);
             });
             chrome.storage.sync.get("currentIssue", function (data) {
               if (data.currentIssue) {
@@ -338,13 +338,13 @@ function searchIssues() {
 }
 
 function clearIssueTable() {
-  issueTable.innerHTML = `<tr>
+  issueTable.innerHTML = `<thead><tr>
     <th>#</th>
     <th>Issue</th>
     <th>State</th>
     <th>Time spent</th>
     <th>Selected</th>
-  </tr>`;
+  </tr></thead><tbody id='issue-table-body'></tbody>`;
 }
 
 function setLayout() {

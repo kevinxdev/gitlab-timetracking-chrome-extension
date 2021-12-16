@@ -13,7 +13,7 @@ let ro = new ResizeObserver((entries) => {
 
 ro.observe(layoutWidthBox);
 
-layoutWidthInput.addEventListener("change", function () {
+layoutWidthInput.addEventListener("input", function () {
   let width = this.value;
   if (width >= 400 && width <= 800) {
     chrome.storage.sync.set({ layoutWidth: width });

@@ -197,12 +197,27 @@ function selectIssue() {
 }
 
 function loadIssues(searchObject) {
+  let extendQuery = `&sort=asc&order_by=due_date`;
+  if (searchObject) {
+    if (searchObject.hasOwnProperty("nameFilter")) {
+      extendQuery += `&search=${searchObject.nameFilter}&in=title`;
+    } else if (searchObject.hasOwnProperty("sort")) {
+      let sort = searchObject.sort;
+      let sorting = searchObject.sorting;
+      if (sorting === "v") {
+        sorting = "asc";
+      } else {
+        sorting = "desc";
+      }
+      extendQuery = `&sort=${sorting}&order_by=${sort}`;
+    }
+  }
   chrome.storage.sync.get(
     ["gitlabUrl", "gitlabPAT", "gitlabUserID"],
     function (data) {
       if (data.gitlabUrl && data.gitlabPAT && data.gitlabUserID) {
         let request = new Request(
-          `${data.gitlabUrl}api/v4/issues?assignee_id=${data.gitlabUserID}&private_token=${data.gitlabPAT}&scope=all&state=opened`,
+          `${data.gitlabUrl}api/v4/issues?private_token=${data.gitlabPAT}&scope=assigned_to_me&state=opened${extendQuery}`,
           {
             headers: {
               "PRIVATE-TOKEN": data.gitlabPAT,
@@ -211,31 +226,8 @@ function loadIssues(searchObject) {
         );
         fetch(request)
           .then((response) => response.json())
-          .then((data) => {
-            let issues = data.filter((issue) => issue.state === "opened");
-            issues = issues.sort((a, b) => {
-              return a.due_date > b.due_date ? 1 : -1;
-            });
-            if (searchObject) {
-              if (searchObject.hasOwnProperty("nameFilter")) {
-                let nameFilter = searchObject.nameFilter.toLowerCase();
-                issues = issues.filter((issue) =>
-                  issue.title.toLowerCase().includes(nameFilter)
-                );
-              } else if (searchObject.hasOwnProperty("sort")) {
-                let sort = searchObject.sort;
-                let sorting = searchObject.sorting;
-                console.log(sort);
-                issues = issues.sort((a, b) => {
-                  if (sorting === "v") {
-                    return a[sort] > b[sort] ? 1 : -1;
-                  } else {
-                    return a[sort] < b[sort] ? 1 : -1;
-                  }
-                });
-              }
-            }
-            console.log(issues);
+          .then((issues) => {
+            issues = issues.slice(0, 10);
             issues.forEach((issue) => {
               let issueRow = document.createElement("tr");
               issueRow.setAttribute("id", issue.id);
@@ -305,10 +297,12 @@ function loadIssues(searchObject) {
                     }
                   );
                 }
-                let issue = issues.filter(
-                  (issue) => issue.id == data.currentIssue
-                )[0];
-                currentIssueInformation.innerHTML = `<h2>Current issue: <a href='${issue.web_url}' target='_blank'>${issue.references.short} ${issue.title}</a></h2>`;
+                if (issues.length > 0) {
+                  let issue = issues.filter(
+                    (issue) => issue.id == data.currentIssue
+                  )[0];
+                  currentIssueInformation.innerHTML = `<h2>Current issue: <a href='${issue.web_url}' target='_blank'>${issue.references.short} ${issue.title}</a></h2>`;
+                }
               }
             });
             let buttons = document.getElementsByClassName("btn-select");

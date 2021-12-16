@@ -235,6 +235,7 @@ function loadIssues() {
         fetch(request)
           .then((response) => response.json())
           .then((issues) => {
+            let issueTableBody = document.getElementById("issue-table-body");
             issues.forEach((issue) => {
               let issueRow = document.createElement("tr");
               issueRow.setAttribute("id", issue.id);

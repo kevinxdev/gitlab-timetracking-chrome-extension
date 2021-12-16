@@ -26,6 +26,7 @@ let issueTableSearchBox = document.getElementById("issue-table-search-box");
 let issueTableSortBox = document.getElementById("issue-table-sort-box");
 let issueASCDESCButton = document.getElementById("asc-desc-button");
 let currentIssueInformation = document.getElementById("current-issue");
+let popup = document.getElementById("popup");
 
 let timer = null;
 
@@ -346,4 +347,15 @@ function clearIssueTable() {
   </tr>`;
 }
 
+function setLayout() {
+  chrome.storage.sync.get("layoutWidth", function (data) {
+    if (data.layoutWidth >= 400 && data.layoutWidth <= 800) {
+      popup.style.width = `${data.layoutWidth}px`;
+    } else {
+      popup.style.width = "400px";
+    }
+  });
+}
+
 loadIssues();
+setLayout();

@@ -12,7 +12,6 @@
     <link rel="stylesheet" href="../css/layout.css" />
     <link rel="stylesheet" href="../css/options.css" />
     <link rel="stylesheet" href="../css/popup.css" />
-
     <title>GitLab Timetracker Options</title>
   </head>
   <body>
@@ -71,8 +70,8 @@
         <div class="row" style="margin-top: 10px">
           <h2>Layout Settings</h2>
           <div class="col-md-12">
-            <section style="width: 100%">
-              <div id="popup" class="grow-with-content">
+            <section>
+              <div id="layout-width-box" class="grow-with-content">
                 <div id="popup-header">
                   <img src="../img/gitlab32.png" alt="GitLab Logo" />
                   <h1>GitLab Timetracker</h1>
@@ -123,8 +122,34 @@
                   </div>
                 </div>
               </div>
+            </section>
+            <div class="row g-3 align-items-center" style="margin-top: 0px">
+              <div class="col-auto">
+                <label for="layout-width-input" class="col-form-label"
+                  >Width</label
+                >
+              </div>
+              <div class="col-auto">
+                <input
+                  type="number"
+                  id="layout-width-input"
+                  class="form-control"
+                  aria-describedby="widthpxInline"
+                  min="400"
+                  max="800"
+                />
+                <div
+                  id="validationServer05Feedback"
+                  class="invalid-feedback invisible"
+                >
+                  Please provide a number between 400 and 800.
+                </div>
+              </div>
+              <div class="col-auto">
+                <span id="widthpxInline" class="form-text">px</span>
+              </div>
             </div>
-          </section>
+          </div>
         </div>
       </div>
     </div>

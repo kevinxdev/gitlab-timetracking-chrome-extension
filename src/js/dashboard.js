@@ -169,6 +169,8 @@ function loadTimetracker() {
                                 `;
                   let timeAccourdionTableBody = document.createElement("tbody");
                   let timespans = [];
+                  let timeCount = 0;
+                  console.log(times);
                   for (const time of times) {
                     if (time.time.hasOwnProperty("startTime")) {
                       timespans.push({
@@ -184,15 +186,18 @@ function loadTimetracker() {
                         left: time.time.resumeTime,
                       });
                     } else if (time.time.hasOwnProperty("stopTime")) {
-                      timespans[timespans.length - 1].timespan.push({
-                        right: time.time.stopTime,
-                      });
+                      if (!times[timeCount-1].time.hasOwnProperty("pauseTime") && time.time.stopTime !== times[timeCount-1].time.pauseTime) {
+                        timespans[timespans.length - 1].timespan.push({
+                          right: time.time.stopTime,
+                        });
+                      }
                       timespans[timespans.length - 1].done = true
                     } else if (time.time.hasOwnProperty("pauseTime")) {
                       timespans[timespans.length - 1].timespan.push({
                         right: time.time.pauseTime,
                       });
                     }
+                    timeCount++;
                   }
                   for (const timespan of timespans) {
                     let issue = data.filter(

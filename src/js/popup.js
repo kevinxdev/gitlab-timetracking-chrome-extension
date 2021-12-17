@@ -303,9 +303,8 @@ function loadIssues() {
                           fetch(request)
                             .then((response) => response.json())
                             .then((project) => {
-                              let json = response.json();
                               chrome.storage.sync.set({
-                                [`id-${issue.project_id}`]: json.name,
+                                [`id-${issue.project_id}`]: project.name,
                               });
                               issueTd.innerText = project.name;
                             });

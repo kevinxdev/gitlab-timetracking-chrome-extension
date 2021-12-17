@@ -1,5 +1,6 @@
 let gitlabUrlInput = document.getElementById("gitlab-url");
 let gitlabPATInput = document.getElementById("gitlab-pat");
+let resetDataButton = document.getElementById("reset-data");
 
 function constructSettings() {
   chrome.storage.sync.get(["gitlabUrl", "gitlabPAT"], function (data) {
@@ -61,6 +62,16 @@ function constructSettings() {
               .getElementById("validationServer04Feedback")
               .classList.remove("invisible");
           });
+      });
+    });
+  });
+  resetDataButton.addEventListener("click", function () {
+    chrome.storage.sync.get(["gitlabUrl", "gitlabPAT", "gitlabUserID"], function (data) {
+      chrome.storage.sync.clear();
+      chrome.storage.sync.set({
+        gitlabUrl: data.gitlabUrl,
+        gitlabPAT: data.gitlabPAT,
+        gitlabUserID: data.gitlabUserID,
       });
     });
   });

@@ -240,7 +240,6 @@ function loadIssues() {
         fetch(request)
           .then((response) => response.json())
           .then((issues) => {
-            let issueTableBody = document.getElementById("issue-table-body");
             issues.forEach((issue) => {
               let fieldsForTable = Object.keys(data.tableFields).filter(
                 (key) => data.tableFields[key].used
@@ -250,8 +249,6 @@ function loadIssues() {
                   data.tableFields[a].sequence - data.tableFields[b].sequence
                 );
               });
-              console.log(issue);
-              console.log(data.tableFields);
               let issueRow = document.createElement("tr");
               issueRow.setAttribute("id", issue.id);
               for (let field of fieldsForTable) {
@@ -291,20 +288,32 @@ function loadIssues() {
                     }
                     break;
                   case "repository":
-                    let request = new Request(
-                      `${issue._links.project}?private_token=${data.gitlabPAT}`,
-                      {
-                        headers: {
-                          "PRIVATE-TOKEN": data.gitlabPAT,
-                        },
+                    chrome.storage.sync.get(
+                      `id-${issue.project_id}`,
+                      function (d) {
+                        if (!d[`id-${issue.project_id}`]) {
+                          let request = new Request(
+                            `${issue._links.project}?private_token=${data.gitlabPAT}`,
+                            {
+                              headers: {
+                                "PRIVATE-TOKEN": data.gitlabPAT,
+                              },
+                            }
+                          );
+                          fetch(request)
+                            .then((response) => response.json())
+                            .then((project) => {
+                              let json = response.json();
+                              chrome.storage.sync.set({
+                                [`id-${issue.project_id}`]: json.name,
+                              });
+                              issueTd.innerText = project.name;
+                            });
+                        } else {
+                          issueTd.innerText = d[`id-${issue.project_id}`];
+                        }
                       }
                     );
-                    fetch(request)
-                      .then((response) => response.json())
-                      .then((d) => {
-                        console.log(d);
-                        issueTd.innerText = d.name;
-                      });
                     break;
                   case "labels":
                     issueTd.innerText = issue.labels.map((label) => {
@@ -315,7 +324,7 @@ function loadIssues() {
               }
               issueTableBody.appendChild(issueRow);
             });
-            chrome.storage.sync.get("currentIssue", function (data) {
+            chrome.storage.sync.get("currentIssue", async function (data) {
               if (data.currentIssue) {
                 let issueRow = document.getElementById(
                   data.currentIssue + "-button"
@@ -389,15 +398,9 @@ function searchIssues() {
   loadIssues();
 }
 
-/* function clearIssueTable() {
-  issueTable.innerHTML = `<thead><tr>
-    <th>#</th>
-    <th>Issue</th>
-    <th>State</th>
-    <th>Time spent</th>
-    <th>Selected</th>
-  </tr></thead><tbody id='issue-table-body'></tbody>`;
-} */
+function clearIssueTable() {
+  issueTableBody.innerHTML = "";
+}
 
 function setLayout() {
   chrome.storage.sync.get("layoutWidth", function (data) {

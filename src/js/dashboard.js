@@ -107,7 +107,7 @@ function loadTimetracker() {
                 listOfTimes.forEach((time, index) => {
                   listOfTimes[index].date = new Date(
                     Object.values(time.time)[0]
-                  ).toLocaleDateString("en-US");
+                  ).toLocaleDateString();
                 });
                 listOfTimes = groupBy(listOfTimes, "date");
                 let timeAccordion = document.getElementById("time-accordion");

@@ -281,7 +281,9 @@ function loadIssues() {
                       issue.time_stats.total_time_spent.toHHMMSS();
                     break;
                   case "due_date":
-                    issueTd.innerText = issue.due_date;
+                    issueTd.innerText = new Date(
+                      issue.due_date
+                    ).toLocaleDateString();
                     if (
                       issue.due_date < new Date().toISOString().split("T")[0]
                     ) {

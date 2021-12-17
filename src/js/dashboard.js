@@ -117,7 +117,7 @@ function loadTimetracker() {
                   let date = listofKeys[i];
                   let timeAccordionItem = document.createElement("div");
                   timeAccordionItem.classList.add("accordion-item");
-                  let dateFormated = date.replaceAll("/", "x");
+                  let dateFormated = date.replaceAll(".", "x");
                   let times = listOfTimes[date];
                   let areaExpanded = false;
                   if (count == 0) {

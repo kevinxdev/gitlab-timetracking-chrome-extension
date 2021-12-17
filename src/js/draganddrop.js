@@ -68,6 +68,7 @@ function dropCell(e) {
         let sequence2 = data.tableFields[cellsOfDrag.id].sequence;
         data.tableFields[cellsOfDrag.id].sequence = sequence1;
         data.tableFields[cellsForDrop.id].sequence = sequence2;
+        chrome.storage.sync.set({ tableFields: data.tableFields });
       }
     });
     resetDragState(e);

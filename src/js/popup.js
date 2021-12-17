@@ -65,7 +65,7 @@ buttonStop.addEventListener("click", stopAction);
 
 function stopAction() {
   chrome.storage.sync.get(["currentIssue", "countedTime", "timerPaused"], function (cdata) {
-    if (cdata.currentIssue && cdata.countedTime) {
+    if (cdata.currentIssue) {
       chrome.storage.sync.get(cdata.currentIssue, function (data) {
         if (!cdata.timerPaused) {
           if (data[cdata.currentIssue]) {

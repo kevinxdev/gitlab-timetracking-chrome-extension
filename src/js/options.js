@@ -106,3 +106,154 @@ function constructSettings() {
   );
 }
 constructSettings();
+
+function generateTable() {
+  chrome.storage.sync.get("tableFields", function (data) {
+    if (!data.tableFields) {
+      chrome.storage.sync.set({
+        tableFields: {
+          short: {
+            name: "#",
+            used: true,
+            sequence: 1,
+          },
+          title: {
+            name: "Issue",
+            used: true,
+            sequence: 2,
+          },
+          time_spent: {
+            name: "Time spent",
+            used: true,
+            sequence: 3,
+          },
+          state: {
+            name: "State",
+            used: false,
+            sequence: 4,
+          },
+          due_date: {
+            name: "Due date",
+            used: false,
+            sequence: 5,
+          },
+          labels: {
+            name: "Labels",
+            used: false,
+            sequence: 6,
+          },
+          repository: {
+            name: "Repository",
+            used: false,
+            sequence: 7,
+          },
+          selected: {
+            name: "Selected",
+            used: true,
+            notRemoveable: true,
+            sequence: 0,
+          },
+        },
+      });
+    }
+    loadTableAndList();
+  });
+}
+
+let issueTableRow = document.getElementById("issue-table-row");
+let issueListGroup = document.getElementById("issue-list-group");
+
+function clearTableAndList() {
+  issueTableRow.innerHTML = "";
+  issueListGroup.innerHTML = "";
+}
+
+function loadTableAndList() {
+  chrome.storage.sync.get("tableFields", function (data) {
+    if (data.tableFields) {
+      let fieldsForTable = Object.keys(data.tableFields).filter(
+        (key) => data.tableFields[key].used
+      );
+      fieldsForTable = fieldsForTable.sort((a, b) => {
+        return data.tableFields[a].sequence - data.tableFields[b].sequence;
+      });
+      for (let field of fieldsForTable) {
+        let tableHeader = document.createElement("th");
+        tableHeader.classList.add("table-cell");
+        tableHeader.setAttribute("draggable", true);
+        tableHeader.innerText = data.tableFields[field].name;
+        tableHeader.id = field;
+        let removeButton = document.createElement("button");
+        removeButton.classList.add("btn", "btn-sm", "btn-primary");
+        removeButton.style.float = "right";
+        removeButton.innerHTML = "-";
+        if (data.tableFields[field].notRemoveable === undefined) {
+          removeButton.classList.add("remove-button");
+          tableHeader.appendChild(removeButton);
+        }
+        issueTableRow.appendChild(tableHeader);
+        let cells = document.getElementsByClassName("table-cell");
+        for (let cell of cells) {
+          cell.style.cursor = "pointer";
+          addDragEvents(cell);
+        }
+      }
+      let fieldsForList = Object.keys(data.tableFields).filter(
+        (key) => !data.tableFields[key].used
+      );
+      fieldsForList = fieldsForList.sort((a, b) => {
+        return data.tableFields[a].sequence - data.tableFields[b].sequence;
+      });
+      for (let field of fieldsForList) {
+        let listGroupItem = document.createElement("li");
+        listGroupItem.classList.add(
+          "list-group-item",
+          "d-flex",
+          "justify-content-between"
+        );
+        listGroupItem.innerText = "" + data.tableFields[field].name;
+        listGroupItem.id = field;
+        let addSpan = document.createElement("span");
+        addSpan.classList.add(
+          "badge",
+          "bg-primary",
+          "rounded-pill",
+          "add-button"
+        );
+        addSpan.innerText = "+";
+        listGroupItem.appendChild(addSpan);
+        issueListGroup.appendChild(listGroupItem);
+      }
+      let addButtons = document.getElementsByClassName("add-button");
+      for (let addButton of addButtons) {
+        addButton.addEventListener("click", function (e) {
+          chrome.storage.sync.get("tableFields", function (data) {
+            if (data.tableFields) {
+              let field = e.target.parentElement.id;
+              data.tableFields[field].used = true;
+              chrome.storage.sync.set({ tableFields: data.tableFields });
+              clearTableAndList();
+              generateTable();
+            }
+          });
+        });
+      }
+      let removeButtons = document.getElementsByClassName("remove-button");
+      for (let removeButton of removeButtons) {
+        removeButton.addEventListener("click", function (e) {
+          chrome.storage.sync.get("tableFields", function (data) {
+            if (data.tableFields) {
+              let field = e.target.parentElement.id;
+              data.tableFields[field].used = false;
+              chrome.storage.sync.set({ tableFields: data.tableFields });
+              clearTableAndList();
+              generateTable();
+            }
+          });
+        });
+      }
+    }
+  });
+}
+
+generateTable();

@@ -221,9 +221,14 @@ function loadIssues() {
     extendQuery += `&search=${nameFilter}&in=title`;
   }
   chrome.storage.sync.get(
-    ["gitlabUrl", "gitlabPAT", "gitlabUserID"],
+    ["gitlabUrl", "gitlabPAT", "gitlabUserID", "tableFields"],
     function (data) {
-      if (data.gitlabUrl && data.gitlabPAT && data.gitlabUserID) {
+      if (
+        data.gitlabUrl &&
+        data.gitlabPAT &&
+        data.gitlabUserID &&
+        data.tableFields
+      ) {
         let request = new Request(
           `${data.gitlabUrl}api/v4/issues?private_token=${data.gitlabPAT}&scope=assigned_to_me&state=opened${extendQuery}`,
           {
@@ -237,31 +242,75 @@ function loadIssues() {
           .then((issues) => {
             let issueTableBody = document.getElementById("issue-table-body");
             issues.forEach((issue) => {
+              let fieldsForTable = Object.keys(data.tableFields).filter(
+                (key) => data.tableFields[key].used
+              );
+              fieldsForTable = fieldsForTable.sort((a, b) => {
+                return (
+                  data.tableFields[a].sequence - data.tableFields[b].sequence
+                );
+              });
+              console.log(issue);
+              console.log(data.tableFields);
               let issueRow = document.createElement("tr");
               issueRow.setAttribute("id", issue.id);
-              let issueReference = document.createElement("td");
-              issueReference.innerText = issue.references.short;
-              issueRow.appendChild(issueReference);
-              let issueTitle = document.createElement("td");
-              let issueLink = document.createElement("a");
-              issueLink.href = issue.web_url;
-              issueLink.target = "_blank";
-              issueLink.innerText = issue.title;
-              issueTitle.appendChild(issueLink);
-              issueRow.appendChild(issueTitle);
-              let issueState = document.createElement("td");
-              issueState.innerText = issue.state;
-              issueRow.appendChild(issueState);
-              let issueTimeSpent = document.createElement("td");
-              issueTimeSpent.innerText =
-                issue.time_stats.total_time_spent.toHHMMSS();
-              issueRow.appendChild(issueTimeSpent);
-              let issueSelected = document.createElement("td");
-              issueSelected.innerHTML =
-                "<button class='btn btn-primary btn-select' id='" +
-                issue.id +
-                "-button'>Select</button>";
-              issueRow.appendChild(issueSelected);
+              for (let field of fieldsForTable) {
+                let issueTd = document.createElement("td");
+                switch (field) {
+                  case "selected":
+                    issueTd.innerHTML =
+                      "<button class='btn btn-primary btn-select' id='" +
+                      issue.id +
+                      "-button'>Select</button>";
+                    break;
+                  case "title":
+                    let link = document.createElement("a");
+                    link.innerText = issue.title;
+                    link.href = issue.web_url;
+                    link.target = "_blank";
+                    issueTd.appendChild(link);
+                    break;
+                  case "short":
+                    issueTd.innerText = issue.references.short;
+                    break;
+                  case "state":
+                    issueTd.innerText = issue.state;
+                    break;
+                  case "time_spent":
+                    issueTd.innerText =
+                      issue.time_stats.total_time_spent.toHHMMSS();
+                    break;
+                  case "due_date":
+                    issueTd.innerText = issue.due_date;
+                    if (
+                      issue.due_date < new Date().toISOString().split("T")[0]
+                    ) {
+                      issueTd.style.color = "red";
+                    }
+                    break;
+                  case "repository":
+                    let request = new Request(
+                      `${issue._links.project}?private_token=${data.gitlabPAT}`,
+                      {
+                        headers: {
+                          "PRIVATE-TOKEN": data.gitlabPAT,
+                        },
+                      }
+                    );
+                    fetch(request)
+                      .then((response) => response.json())
+                      .then((d) => {
+                        console.log(d);
+                        issueTd.innerText = d.name;
+                      });
+                    break;
+                  case "labels":
+                    issueTd.innerText = issue.labels.map((label) => {
+                      return label;
+                    });
+                }
+                issueRow.appendChild(issueTd);
+              }
               issueTableBody.appendChild(issueRow);
             });
             chrome.storage.sync.get("currentIssue", function (data) {
@@ -338,7 +387,7 @@ function searchIssues() {
   loadIssues();
 }
 
-function clearIssueTable() {
+/* function clearIssueTable() {
   issueTable.innerHTML = `<thead><tr>
     <th>#</th>
     <th>Issue</th>
@@ -346,7 +395,7 @@ function clearIssueTable() {
     <th>Time spent</th>
     <th>Selected</th>
   </tr></thead><tbody id='issue-table-body'></tbody>`;
-}
+} */
 
 function setLayout() {
   chrome.storage.sync.get("layoutWidth", function (data) {
@@ -358,5 +407,82 @@ function setLayout() {
   });
 }
 
+generateTable();
 loadIssues();
 setLayout();
+
+let issueTableHeadRow = document.getElementById("issue-table-head-row");
+
+function loadTable() {
+  chrome.storage.sync.get("tableFields", function (data) {
+    if (data.tableFields) {
+      let fieldsForTable = Object.keys(data.tableFields).filter(
+        (key) => data.tableFields[key].used
+      );
+      fieldsForTable = fieldsForTable.sort((a, b) => {
+        return data.tableFields[a].sequence - data.tableFields[b].sequence;
+      });
+      for (let field of fieldsForTable) {
+        let tableHeader = document.createElement("th");
+        tableHeader.classList.add("table-cell");
+        tableHeader.setAttribute("draggable", true);
+        tableHeader.innerText = data.tableFields[field].name;
+        tableHeader.id = field;
+        issueTableHeadRow.appendChild(tableHeader);
+      }
+    }
+  });
+}
+
+function generateTable() {
+  chrome.storage.sync.get("tableFields", function (data) {
+    if (!data.tableFields) {
+      chrome.storage.sync.set({
+        tableFields: {
+          short: {
+            name: "#",
+            used: true,
+            sequence: 1,
+          },
+          title: {
+            name: "Issue",
+            used: true,
+            sequence: 2,
+          },
+          time_spent: {
+            name: "Time spent",
+            used: true,
+            sequence: 3,
+          },
+          state: {
+            name: "State",
+            used: false,
+            sequence: 4,
+          },
+          due_date: {
+            name: "Due date",
+            used: false,
+            sequence: 5,
+          },
+          labels: {
+            name: "Labels",
+            used: false,
+            sequence: 6,
+          },
+          repository: {
+            name: "Repository",
+            used: false,
+            sequence: 7,
+          },
+          selected: {
+            name: "Selected",
+            used: true,
+            notRemoveable: true,
+            sequence: 0,
+          },
+        },
+      });
+    }
+    loadTable();
+  });
+}

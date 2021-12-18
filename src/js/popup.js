@@ -171,8 +171,7 @@ function loadIssues() {
         );
         fetch(request)
           .then((response) => response.json())
-          .then((data) => {
-            let issues = data.filter((issue) => issue.state === "opened");
+          .then((issues) => {
             let issueTable = document.getElementById("issue-table");
             issues.forEach((issue) => {
               let issueRow = document.createElement("tr");

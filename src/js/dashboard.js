@@ -185,14 +185,14 @@ function loadTimetracker() {
                       timespans[timespans.length - 1].timespan.push({
                         left: time.time.resumeTime,
                       });
-                    } else if (time.time.hasOwnProperty("stopTime")) {
+                    } else if (time.time.hasOwnProperty("stopTime") && times[timeCount-1] && timespans[timespans.length - 1]) {
                       if (!times[timeCount-1].time.hasOwnProperty("pauseTime") && time.time.stopTime !== times[timeCount-1].time.pauseTime) {
                         timespans[timespans.length - 1].timespan.push({
                           right: time.time.stopTime,
                         });
                       }
                       timespans[timespans.length - 1].done = true
-                    } else if (time.time.hasOwnProperty("pauseTime")) {
+                    } else if (time.time.hasOwnProperty("pauseTime") && timespans[timespans.length - 1]) {
                       timespans[timespans.length - 1].timespan.push({
                         right: time.time.pauseTime,
                       });

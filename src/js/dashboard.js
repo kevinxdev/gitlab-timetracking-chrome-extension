@@ -75,7 +75,7 @@ function getHumanDuration(timespan) {
 
 function loadTimetracker() {
   chrome.storage.sync.get(
-    ["gitlabUrl", "gitlabPAT", "gitlabUserID"],
+    ["gitlabUrl", "gitlabPAT", "gitlabUserID", "dashboardDayAmountEnabled", "dashboardDayAmount"],
     function (data) {
       if (data.gitlabUrl && data.gitlabPAT && data.gitlabUserID) {
         let request = new Request(
@@ -88,8 +88,8 @@ function loadTimetracker() {
         );
         fetch(request)
           .then((response) => response.json())
-          .then((data) => {
-            let issueIds = data.map((issue) => issue.id.toString());
+          .then((datas) => {
+            let issueIds = datas.map((issue) => issue.id.toString());
             chrome.storage.sync.get(issueIds, function (issueTimetracker) {
               if (issueTimetracker) {
                 let listOfTimes = [];
@@ -113,7 +113,16 @@ function loadTimetracker() {
                 let timeAccordion = document.getElementById("time-accordion");
                 let listofKeys = Object.keys(listOfTimes);
                 let count = 0;
-                for (let i = listofKeys.length - 1; i >= 0; i--) {
+                let amountOfDays = listofKeys.length
+                if (data.dashboardDayAmountEnabled && data.dashboardDayAmount) {
+                  if (amountOfDays > data.dashboardDayAmount) {
+                    amountOfDays -= data.dashboardDayAmount;
+                    for (let i = 0; i < amountOfDays; i++) {
+                      listofKeys.shift();
+                    }
+                  }
+                }
+                for (let i = amountOfDays - 1; i >= 0; i--) {
                   let date = listofKeys[i];
                   let timeAccordionItem = document.createElement("div");
                   timeAccordionItem.classList.add("accordion-item");
@@ -170,7 +179,6 @@ function loadTimetracker() {
                   let timeAccourdionTableBody = document.createElement("tbody");
                   let timespans = [];
                   let timeCount = 0;
-                  console.log(times);
                   for (const time of times) {
                     if (time.time.hasOwnProperty("startTime")) {
                       timespans.push({
@@ -200,7 +208,7 @@ function loadTimetracker() {
                     timeCount++;
                   }
                   for (const timespan of timespans) {
-                    let issue = data.filter(
+                    let issue = datas.filter(
                       (issue) => issue.id.toString() === timespan.issue
                     )[0];
                     let timeAccourdionTableRow = document.createElement("tr");

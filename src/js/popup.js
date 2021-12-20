@@ -124,8 +124,8 @@ function stopAction() {
   chrome.storage.sync.get(
     ["currentIssue", "countedTime", "timerPaused"],
     function (cdata) {
+      chrome.storage.sync.get(cdata.currentIssue, function (data) {
       if (cdata.currentIssue && cdata.countedTime && !cdata.timerPaused) {
-        chrome.storage.sync.get(cdata.currentIssue, function (data) {
           if (data[cdata.currentIssue]) {
             data = data[cdata.currentIssue];
             data.push({ stopTime: new Date().getTime() });
@@ -148,8 +148,7 @@ function stopAction() {
           }
         }
       });
-    }
-  );
+    });
   buttonStop.classList.add("timer-button-activated");
   buttonStart.classList.remove("timer-button-activated");
   buttonPause.classList.remove("timer-button-activated");

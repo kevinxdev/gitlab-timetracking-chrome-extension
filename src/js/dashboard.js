@@ -137,7 +137,6 @@ function loadTimetracker() {
                 }
                 for (let i = amountOfDays - 1; i >= 0; i--) {
                   let date = listofKeys[i];
-                  console.log
                   let timeAccordionItem = document.createElement("div");
                   timeAccordionItem.classList.add("accordion-item");
                   let dateFormated = replaceAllNotCSSCharacters(date);

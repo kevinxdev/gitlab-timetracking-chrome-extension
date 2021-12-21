@@ -122,10 +122,10 @@ buttonStop.addEventListener("click", stopAction);
 
 function stopAction() {
   chrome.storage.sync.get(
-    ["currentIssue", "countedTime", "timerPaused"],
+    ["currentIssue", "countedTime", "timerPaused", "timerStarted"],
     function (cdata) {
       chrome.storage.sync.get(cdata.currentIssue, function (data) {
-      if (cdata.currentIssue && cdata.countedTime && !cdata.timerPaused) {
+      if (cdata.currentIssue && !cdata.timerPaused && cdata.timerStarted) {
           if (data[cdata.currentIssue]) {
             data = data[cdata.currentIssue];
             data.push({ stopTime: new Date().getTime() });
@@ -138,7 +138,6 @@ function stopAction() {
         } else {
           if (data[cdata.currentIssue]) {
             data = data[cdata.currentIssue];
-            console.log(data[data.length-1])
             data.push({ stopTime: data[data.length-1].pauseTime });
             chrome.storage.sync.set({ [cdata.currentIssue]: data });
           } else {

@@ -119,6 +119,9 @@ function loadTimetracker() {
                   ).toLocaleDateString();
                 });
                 listOfTimes = groupBy(listOfTimes, "date");
+                if ("Invalid Date" in listOfTimes) {
+                  delete listOfTimes["Invalid Date"];
+                }
                 let timeAccordion = document.getElementById("time-accordion");
                 let listofKeys = Object.keys(listOfTimes);
                 let count = 0;

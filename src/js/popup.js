@@ -38,7 +38,7 @@ issueTableSearchBox.addEventListener("input", searchIssues);
 issueTableSortBox.addEventListener("change", function () {
   clearIssueTable();
   window.sessionStorage.setItem("sort", this.value);
-  loadIssues();
+  loadIssues(true);
 });
 
 issueASCDESCButton.addEventListener("click", function () {
@@ -48,7 +48,7 @@ issueASCDESCButton.addEventListener("click", function () {
   } else {
     window.sessionStorage.setItem("sorting", "desc");
   }
-  loadIssues();
+  loadIssues(true);
   if (this.innerText === "v") {
     this.innerText = "^";
   } else {
@@ -213,7 +213,7 @@ function selectIssue() {
   buttonPause.disabled = true;
 }
 
-function loadIssues() {
+function loadIssues(not) {
   let extendQuery = `&sort=asc&order_by=due_date`;
   let sort = window.sessionStorage.getItem("sort");
   let sorting = window.sessionStorage.getItem("sorting");
@@ -361,7 +361,9 @@ function loadIssues() {
                         chrome.storage.sync.set({ countedTime: time });
                         chrome.storage.sync.set({ saveTime: 0 });
                         timeDisplay.children[0].innerText = time.toHHMMSS();
-                        timer = runTimer();
+                        if (!not) {
+                          timer = runTimer();
+                        }
                       } else if (data.timerPaused) {
                         buttonStop.disabled = false;
                         buttonPause.classList.add("timer-button-activated");
@@ -409,7 +411,7 @@ function runTimer() {
 function searchIssues() {
   clearIssueTable();
   window.sessionStorage.setItem("nameFilter", this.value);
-  loadIssues();
+  loadIssues(true);
 }
 
 function clearIssueTable() {

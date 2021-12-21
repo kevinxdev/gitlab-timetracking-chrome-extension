@@ -73,6 +73,15 @@ function getHumanDuration(timespan) {
   return `${hours}h ${minutes}m ${seconds}s`;
 }
 
+function replaceAllNotCSSCharacters(date) {
+  let dateFormatted = date;
+  let characters = ["~", "!", "@", "$", "%", "^", "&", "*", "(", ")", "+", "=", ",", ".", "/", "'", ";", ":", "\"", "?", ">", "<", "[", "]", "\\", "{", "}", "|", "`", "#", " "];
+  for (const c of characters) {
+    dateFormatted = dateFormatted.replaceAll(c, "x");
+  }
+  return dateFormatted;
+}
+
 function loadTimetracker() {
   chrome.storage.sync.get(
     ["gitlabUrl", "gitlabPAT", "gitlabUserID", "dashboardDayAmountEnabled", "dashboardDayAmount"],
@@ -116,17 +125,19 @@ function loadTimetracker() {
                 let amountOfDays = listofKeys.length
                 if (data.dashboardDayAmountEnabled && data.dashboardDayAmount) {
                   if (amountOfDays > data.dashboardDayAmount) {
-                    amountOfDays -= data.dashboardDayAmount;
+                    amountOfDays -= parseInt(data.dashboardDayAmount);
                     for (let i = 0; i < amountOfDays; i++) {
                       listofKeys.shift();
                     }
+                    amountOfDays = parseInt(data.dashboardDayAmount);
                   }
                 }
                 for (let i = amountOfDays - 1; i >= 0; i--) {
                   let date = listofKeys[i];
+                  console.log
                   let timeAccordionItem = document.createElement("div");
                   timeAccordionItem.classList.add("accordion-item");
-                  let dateFormated = date.replaceAll(".", "x");
+                  let dateFormated = replaceAllNotCSSCharacters(date);
                   let times = listOfTimes[date];
                   let areaExpanded = false;
                   if (count == 0) {

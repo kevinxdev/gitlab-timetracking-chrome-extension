@@ -18,13 +18,38 @@ let dashboardDayAmountEnabled = document.getElementById("dashboard-day-amount-en
 let dashboardDayAmountDiv = document.getElementById("dashboard-day-amount-div");
 let dashboardDayAmount = document.getElementById("dashboard-day-amount");
 
+layoutWidthInput.addEventListener("input", function () {
+  let width = this.value;
+  if (width >= 400 && width <= 800) {
+    chrome.storage.sync.set({ layoutWidth: width });
+    layoutWidthBox.style.width = `${width}px`;
+    layoutWidthInput.classList.remove("is-invalid");
+    document
+      .getElementById("validationServer05Feedback")
+      .classList.add("invisible");
+  } else {
+    layoutWidthInput.classList.add("is-invalid");
+    document
+      .getElementById("validationServer05Feedback")
+      .classList.remove("invisible");
+  }
+});
+
 function constructSettings() {
-  chrome.storage.sync.get(["gitlabUrl", "gitlabPAT", "dashboardDayAmountEnabled", "dashboardDayAmount"], function (data) {
+  chrome.storage.sync.get(["gitlabUrl", "gitlabPAT", "dashboardDayAmountEnabled", "dashboardDayAmount", "layoutWidth"], function (data) {
     if (data.gitlabUrl) {
       gitlabUrlInput.value = data.gitlabUrl;
     }
     if (data.gitlabPAT) {
       gitlabPATInput.value = data.gitlabPAT;
+    }
+    if (!data.layoutWidth) {
+      chrome.storage.sync.set({ layoutWidth: 400 });
+      layoutWidthBox.style.width = "400px";
+      layoutWidthInput.value = 400;
+    } else {
+      layoutWidthBox.style.width = `${data.layoutWidth}px`;
+      layoutWidthInput.value = data.layoutWidth;
     }
     if (data.dashboardDayAmountEnabled) {
       dashboardDayAmountEnabled.checked = data.dashboardDayAmountEnabled;

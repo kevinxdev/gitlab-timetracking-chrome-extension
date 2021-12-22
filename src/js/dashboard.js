@@ -110,18 +110,20 @@ function loadTimetracker() {
                     });
                   }
                 }
-                listOfTimes.sort((a, b) => {
-                  return Object.values(a.time)[0] - Object.values(b.time)[0];
-                });
                 listOfTimes.forEach((time, index) => {
                   listOfTimes[index].date = new Date(
                     Object.values(time.time)[0]
                   ).toLocaleDateString();
                 });
-                listOfTimes = groupBy(listOfTimes, "date");
-                if ("Invalid Date" in listOfTimes) {
-                  delete listOfTimes["Invalid Date"];
+                for (let i = 0; i < listOfTimes.length; i++) {
+                  if (listOfTimes[i].date === "Invalid Date") {
+                    delete listOfTimes[i];
+                  }
                 }
+                listOfTimes.sort((a, b) => {
+                  return Object.values(a.time)[0] - Object.values(b.time)[0];
+                });
+                listOfTimes = groupBy(listOfTimes, "date");
                 let timeAccordion = document.getElementById("time-accordion");
                 let listofKeys = Object.keys(listOfTimes);
                 let count = 0;

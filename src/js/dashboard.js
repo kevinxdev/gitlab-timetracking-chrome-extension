@@ -82,6 +82,29 @@ function replaceAllNotCSSCharacters(date) {
   return dateFormatted;
 }
 
+function getDate(timestamp) {
+  let date = new Date(timestamp);
+  let datestring = date.toISOString().split("T")[0];
+  date = new Date(datestring);
+  return date 
+}
+
+function backsetDay(listOfTimes, backDayKeys) {
+  let allDays = listOfTimes.map((time) => time.date);
+  let days = new Set(allDays);
+  days.forEach((day) => {
+    let times = listOfTimes.filter((time) => time.date == day);
+    let time = times[times.length - 1];
+    if (backDayKeys.includes(Object.keys(time.time)[0])) {
+      let daystamp = getDate(Object.values(listOfTimes.filter((time) => time.date == day)[0].time)[0]);
+      let times = listOfTimes.filter((time) => getDate(Object.values(time.time)[0]) > daystamp);
+      let lastDay = times[times.length - 1].date;
+      time.date = lastDay;
+    }
+  });
+  return listOfTimes;
+}
+
 function loadTimetracker() {
   chrome.storage.sync.get(
     ["gitlabUrl", "gitlabPAT", "gitlabUserID", "dashboardDayAmountEnabled", "dashboardDayAmount"],
@@ -123,7 +146,18 @@ function loadTimetracker() {
                 listOfTimes.sort((a, b) => {
                   return Object.values(a.time)[0] - Object.values(b.time)[0];
                 });
+                backDayKeys = ["startTime", "resumeTime"];
+                listOfTimes = backsetDay(listOfTimes, backDayKeys);
                 listOfTimes = groupBy(listOfTimes, "date");
+                for (let time in listOfTimes) {
+                  let timestamp = Object.values(listOfTimes[time][0].time)[0];
+                  let key = Object.keys(listOfTimes[time][0].time)[0];
+                  if (key == "resumeTime") {
+                    listOfTimes[time][0].time = {
+                      startTime: timestamp,
+                    };
+                  }
+                }
                 let timeAccordion = document.getElementById("time-accordion");
                 let listofKeys = Object.keys(listOfTimes);
                 let count = 0;

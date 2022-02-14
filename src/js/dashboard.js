@@ -262,44 +262,54 @@ function loadTimetracker() {
                     let issue = datas.filter(
                       (issue) => issue.id.toString() === timespan.issue
                     )[0];
-                    let timeAccourdionTableRow = document.createElement("tr");
-                    let duration = getDuration(timespan.timespan);
                     let humanDuration = getHumanDuration(timespan.timespan);
                     let xhumanDuration = humanDuration.replaceAll(" ", "x");
-                    chrome.storage.sync.get(
-                      [`committed-${issue.id}-${xhumanDuration}`],
-                      function (data) {
-                        let element = `<button class='commit-button' id='${issue.id}-${xhumanDuration}'>Commit</button>`;
-                        if (data[`committed-${issue.id}-${xhumanDuration}`]) {
-                          element = `<strong class='commit-done'>Done :)</strong>`;
-                        }
-                        if (!timespan.done) {
-                          element = `<strong>Doing...</strong>`;
-                        }
-                        timeAccourdionTableRow.innerHTML = `
-                                      <td><a href='${
-                                        issue.web_url
-                                      }' target='_blank'>${
-                          issue.references.short
-                        }</a></td>
-                                      <td>${formatTimespan(
-                                        timespan.timespan
-                                      )}</td>
-                                      <td>${duration}</td>
-                                      <td>${element}</td>
-                                      `;
-                        let buttons =
-                          timeAccourdionTableRow.getElementsByClassName(
-                            "commit-button"
-                          );
-                        for (const button of buttons) {
-                          button.addEventListener("click", commitTime);
-                        }
-                        timeAccourdionTableBody.appendChild(
-                          timeAccourdionTableRow
+                    chrome.storage.sync.get([`removed-${issue.id}-${xhumanDuration}`], function (data) {
+                      if (!data[`removed-${issue.id}-${xhumanDuration}`]) {
+                        let timeAccourdionTableRow = document.createElement("tr");
+                        let duration = getDuration(timespan.timespan);
+                        chrome.storage.sync.get(
+                          [`committed-${issue.id}-${xhumanDuration}`],
+                          function (data) {
+                            let element = `<button class='commit-button' id='${issue.id}-${xhumanDuration}'>Commit</button>`;
+                            if (data[`committed-${issue.id}-${xhumanDuration}`]) {
+                              element = `<strong class='commit-done'>Done :)</strong> <button class='revert-time' id='${issue.id}-${xhumanDuration}'>Revert!</button>`;
+                            }
+                            if (!timespan.done) {
+                              element = `<strong>Doing...</strong>`;
+                            }
+                            timeAccourdionTableRow.innerHTML = `
+                                          <td><a href='${
+                                            issue.web_url
+                                          }' target='_blank'>${
+                              issue.references.short
+                            }</a></td>
+                                          <td>${formatTimespan(
+                                            timespan.timespan
+                                          )}</td>
+                                          <td>${duration}</td>
+                                          <td>${element}</td>
+                                          `;
+                            let buttons =
+                              timeAccourdionTableRow.getElementsByClassName(
+                                "commit-button"
+                              );
+                            for (const button of buttons) {
+                              button.addEventListener("click", commitTime);
+                            }
+                            let revertButtons = timeAccourdionTableRow.getElementsByClassName(
+                              "revert-time"
+                            );
+                            for (const button of revertButtons) {
+                              button.addEventListener("click", revertTime);
+                            }
+                            timeAccourdionTableBody.appendChild(
+                              timeAccourdionTableRow
+                            );
+                          }
                         );
                       }
-                    );
+                    });
                   }
                   timeAccourdionTable.appendChild(timeAccourdionTableBody);
                   timeAccourdionDivTable.appendChild(timeAccourdionTable);
@@ -353,6 +363,47 @@ function commitTime() {
   );
   chrome.storage.sync.set({ [`committed-${this.id}`]: true });
   this.parentElement.innerHTML = `<strong class='commit-done'>Done :)</strong>`;
+}
+
+function revertTime() {
+  let issueId = this.id.split("-")[0];
+  let humanDuration = this.id.split("-")[1].replaceAll("x", " ");
+  chrome.storage.sync.get(
+    ["gitlabUrl", "gitlabPAT", "gitlabUserID"],
+    function (data) {
+      if (data.gitlabUrl && data.gitlabPAT && data.gitlabUserID) {
+        let request = new Request(
+          `${data.gitlabUrl}api/v4/issues?assignee_id=${data.gitlabUserID}&private_token=${data.gitlabPAT}&scope=all&state=opened`,
+          {
+            headers: {
+              "PRIVATE-TOKEN": data.gitlabPAT,
+            },
+          }
+        );
+        fetch(request)
+          .then((response) => response.json())
+          .then((datas) => {
+            let issue = datas.filter((issue) => issue.id == issueId)[0];
+            let request = new Request(
+              `${data.gitlabUrl}api/v4/projects/${issue.project_id}/issues/${issue.iid}/add_spent_time?assignee_id=${data.gitlabUserID}`,
+              {
+                method: "POST",
+                headers: {
+                  "PRIVATE-TOKEN": data.gitlabPAT,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  duration: "-" + humanDuration,
+                }),
+              }
+            );
+            fetch(request);
+          });
+      }
+    }
+  );
+  chrome.storage.sync.set({ [`removed-${this.id}`]: true });
+  this.parentElement.innerHTML = `<strong class='commit-done'>Reverted!</strong>`;
 }
 
 loadTimetracker();

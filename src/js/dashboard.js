@@ -98,8 +98,10 @@ function backsetDay(listOfTimes, backDayKeys) {
     if (backDayKeys.includes(Object.keys(time.time)[0])) {
       let daystamp = getDate(Object.values(listOfTimes.filter((time) => time.date == day)[0].time)[0]);
       let times = listOfTimes.filter((time) => getDate(Object.values(time.time)[0]) > daystamp);
-      let lastDay = times[times.length - 1].date;
-      time.date = lastDay;
+      if (times[times.length - 1]) {
+        let lastDay = times[times.length - 1].date;
+        time.date = lastDay;
+      }
     }
   });
   return listOfTimes;
@@ -362,7 +364,14 @@ function commitTime() {
     }
   );
   chrome.storage.sync.set({ [`committed-${this.id}`]: true });
-  this.parentElement.innerHTML = `<strong class='commit-done'>Done :)</strong>`;
+  let el = this.parentElement
+  this.parentElement.innerHTML = `<strong class='commit-done'>Done :)</strong>  <button class='revert-time' id='${this.id}'>Revert!</button>`;
+  let revertButtons = el.getElementsByClassName(
+    "revert-time"
+  );
+  for (const button of revertButtons) {
+    button.addEventListener("click", revertTime);
+  }
 }
 
 function revertTime() {
